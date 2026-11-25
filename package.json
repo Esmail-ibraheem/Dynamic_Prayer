@@ -1,0 +1,25 @@
+{
+  "name": "waqt-blocks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dynamic, DST-aware prayer-time .ics subscription feed that blocks prayers as Busy in work calendars.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning src/server.js",
+    "dev": "node --no-warnings=ExperimentalWarning --watch src/server.js",
+    "test": "node --no-warnings=ExperimentalWarning --test \"test/*.test.js\"",
+    "data:cities": "node scripts/build-cities.mjs",
+    "data:reference": "node scripts/fetch-reference.mjs"
+  },
+  "dependencies": {
+    "@photostructure/tz-lookup": "^11.8.0",
+    "adhan": "^4.4.6",
+    "luxon": "^3.7.2"
+  },
+  "devDependencies": {
+    "ical.js": "^2.2.1"
+  }
+}

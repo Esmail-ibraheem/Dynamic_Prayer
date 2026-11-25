@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waqt — prayer blocks for your work calendar</title>
+  <meta name="description" content="A calendar subscription that blocks prayer times as Busy in Outlook, Google Calendar and Apple Calendar. Recalculated daily, correct across clock changes, kept to your working hours.">
+  <meta name="theme-color" content="#16203A">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/instrument-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#build">Skip to setup</a>
+  <header class="top">
+    <a class="brand" href="/" aria-label="Waqt home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 22a11 11 0 0 1 22 0" /><circle cx="22" cy="13.5" r="2.6" /><path d="M3 22h26M8 27h16" /></svg>
+      <span>Waqt</span>
+    </a>
+    <nav class="top-nav" aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#build" id="nav-build">Set up</a>
+      <a href="/manage" id="nav-manage" hidden>Your feed</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <h1 id="hero-title">Prayer blocks that follow the sun, not the clock.</h1>
+        <p class="lede">Subscribe once in Outlook, Google Calendar or Apple Calendar. Every day’s blocks are worked out from your coordinates and your timezone, shown to colleagues as Busy, and kept inside your working hours. Your work account never gives this site any access.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#build">Set up your feed</a>
+          <button class="btn btn-quiet" type="button" id="load-example">Start from the Munich example</button>
+        </div>
+      </div>
+      <figure class="season" id="season-demo" aria-describedby="season-caption">
+        <div class="season-head">
+          <p class="season-place">Munich, working 09:00–18:00</p>
+          <p class="season-legend"><span class="key key-on"></span>Blocked as Busy <span class="key key-off"></span>Outside the workday</p>
+        </div>
+        <div class="season-rows" id="season-rows"><p class="loading">Calculating…</p></div>
+        <figcaption id="season-caption">Same settings, three days in 2026. After the clocks go back on 25 October, every prayer jumps an hour earlier on the clock and Maghrib lands inside the workday, so it is blocked automatically. Friday prayer moves from its summer slot to its winter slot.</figcaption>
+      </figure>
+    </section>
+
+    <section class="how" id="how" aria-labelledby="how-title">
+      <div class="how-text">
+        <h2 id="how-title">A recurring event is wrong almost every day</h2>
+        <p>Prayer times move a few minutes daily with the sun and jump a full hour at each clock change. A fixed “daily at 13:00” event drifts away from Dhuhr, and an <span lang="en">.ics</span> file made with a fixed UTC offset is an hour off for half the year.</p>
+        <dl class="facts">
+          <div><dt>No permissions</dt><dd>It is a read-only <code>webcal://</code> subscription (RFC 5545). Nothing connects to your Microsoft or Google account, so company OAuth policies don’t apply.</dd></div>
+          <div><dt>Right after every clock change</dt><dd>Each day is calculated on its own against the IANA timezone database, so CET and CEST, GMT and BST, EST and EDT are always applied to the correct dates.</dd></div>
+          <div><dt>Only during work</dt><dd>Blocks outside your working hours are left out. In winter Maghrib comes into the workday and is blocked; in summer it drops out again.</dd></div>
+          <div><dt>Same link when you travel</dt><dd>Change your city from a private link. The address in your work calendar never changes.</dd></div>
+        </dl>
+      </div>
+      <figure class="year">
+        <div class="year-chart-host" id="year-demo"><p class="loading">Calculating…</p></div>
+        <figcaption><span id="year-demo-readout" aria-live="polite">Munich, 2026, in local clock time. Point at the chart to read a day.</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="build" id="build" aria-labelledby="build-title">
+      <div class="build-head">
+        <h2 id="build-title">Set up your feed</h2>
+        <p id="build-sub">Choose where you work and how long each prayer takes. The preview updates as you go.</p>
+      </div>
+
+      <div class="feed-panel" id="feed-panel" hidden></div>
+
+      <div class="build-grid">
+        <form class="steps" id="settings-form" novalidate>
+          <fieldset class="step" id="step-location">
+            <legend><span class="step-n">1</span>Location</legend>
+            <div class="field">
+              <label for="place-input">City or coordinates</label>
+              <div class="place-wrap">
+                <input id="place-input" type="text" placeholder="Search, e.g. Munich, ميونخ or 48.14, 11.58">
+              </div>
+              <button class="btn btn-link" type="button" id="locate-btn">Use my current location</button>
+            </div>
+            <div class="chosen" id="chosen-place" aria-live="polite"><p class="muted">No location yet.</p></div>
+            <details class="more">
+              <summary>Exact coordinates and timezone</summary>
+              <div class="row3">
+                <div class="field"><label for="loc-lat">Latitude</label><input id="loc-lat" type="number" step="0.0001" min="-90" max="90" data-loc="lat"></div>
+                <div class="field"><label for="loc-lon">Longitude</label><input id="loc-lon" type="number" step="0.0001" min="-180" max="180" data-loc="lon"></div>
+                <div class="field"><label for="loc-tz">Timezone</label><input id="loc-tz" type="text" list="tz-list" data-loc="timezone" spellcheck="false"></div>
+              </div>
+              <datalist id="tz-list"></datalist>
+              <p class="hint">Times use the IANA timezone, so daylight-saving rules are applied automatically.</p>
+            </details>
+
+            <div class="trips">
+              <h3>Planned trips</h3>
+              <p class="hint">Working somewhere else for a few days? Add the trip and those days are calculated for that place and its timezone, in advance.</p>
+              <ul class="trip-list" id="trip-list"></ul>
+              <details class="more" id="trip-add">
+                <summary>Add a trip</summary>
+                <div class="field">
+                  <label for="trip-place">Place</label>
+                  <div class="place-wrap"><input id="trip-place" type="text" placeholder="Search a city"></div>
+                  <p class="trip-picked muted" id="trip-picked">No place chosen.</p>
+                </div>
+                <div class="row3">
+                  <div class="field"><label for="trip-from">From</label><input id="trip-from" type="date"></div>
+                  <div class="field"><label for="trip-to">Until</label><input id="trip-to" type="date"></div>
+                  <div class="field"><label for="trip-label">Name (optional)</label><input id="trip-label" type="text" maxlength="60" placeholder="Client visit"></div>
+                </div>
+                <button class="btn" type="button" id="trip-save">Add trip</button>
+              </details>
+            </div>
+          </fieldset>
+
+          <fieldset class="step">
+            <legend><span class="step-n">2</span>Calculation</legend>
+            <div class="field">
+              <label for="method">Calculation method</label>
+              <select id="method" data-path="method"></select>
+              <p class="hint" id="method-note"></p>
+            </div>
+            <div class="row3" data-show-if="method=Custom">
+              <div class="field"><label for="ca-fajr">Fajr angle (°)</label><input id="ca-fajr" type="number" step="0.1" min="5" max="25" data-path="customAngles.fajrAngle" data-type="float"></div>
+              <div class="field"><label for="ca-isha">Isha angle (°)</label><input id="ca-isha" type="number" step="0.1" min="0" max="25" data-path="customAngles.ishaAngle" data-type="float"></div>
+              <div class="field"><label for="ca-int">Or Isha after Maghrib (min)</label><input id="ca-int" type="number" min="0" max="180" data-path="customAngles.ishaInterval" data-type="int"></div>
+            </div>
+            <div class="field" role="radiogroup" aria-labelledby="madhab-label">
+              <span class="label" id="madhab-label">Asr time</span>
+              <div class="seg">
+                <label><input type="radio" name="madhab" value="shafi" data-path="madhab"><span>Standard <small>Shafi’i, Maliki, Hanbali</small></span></label>
+                <label><input type="radio" name="madhab" value="hanafi" data-path="madhab"><span>Hanafi <small>later Asr</small></span></label>
+              </div>
+            </div>
+            <details class="more">
+              <summary>High latitudes and minute adjustments</summary>
+              <div class="field">
+                <label for="hlr">Fajr and Isha at high latitudes</label>
+                <select id="hlr" data-path="highLatitudeRule">
+                  <option value="auto">Recommended for this latitude</option>
+                  <option value="middleofthenight">Middle of the night</option>
+                  <option value="seventhofthenight">One seventh of the night</option>
+                  <option value="twilightangle">Twilight angle</option>
+                </select>
+              </div>
+              <p class="hint">Shift a prayer’s calculated time to match your local mosque timetable (minutes, negative for earlier).</p>
+              <div class="adjust">
+                <label>Fajr<input type="number" min="-60" max="60" data-path="adjustments.fajr" data-type="int"></label>
+                <label>Dhuhr<input type="number" min="-60" max="60" data-path="adjustments.dhuhr" data-type="int"></label>
+                <label>Asr<input type="number" min="-60" max="60" data-path="adjustments.asr" data-type="int"></label>
+                <label>Maghrib<input type="number" min="-60" max="60" data-path="adjustments.maghrib" data-type="int"></label>
+                <label>Isha<input type="number" min="-60" max="60" data-path="adjustments.isha" data-type="int"></label>
+              </div>
+            </details>
+          </fieldset>
+
+          <fieldset class="step">
+            <legend><span class="step-n">3</span>Workday</legend>
+            <label class="switch"><input type="checkbox" data-path="work.filter" data-type="bool"><span>Only block prayers that fall in my working hours</span></label>
+            <div data-show-if="work.filter=true">
+              <div class="row3">
+                <div class="field"><label for="work-start">Start</label><input id="work-start" type="time" data-path="work.start"></div>
+                <div class="field"><label for="work-end">End</label><input id="work-end" type="time" data-path="work.end"></div>
+                <p class="hint field-hint" id="overnight-note" hidden>Your shift runs past midnight; early prayers the next morning count too.</p>
+              </div>
+              <div class="field" role="group" aria-labelledby="days-label">
+                <span class="label" id="days-label">Workdays</span>
+                <div class="days" id="work-days">
+                  <label><input type="checkbox" value="1" data-path="work.days" data-type="days"><span>Mon</span></label>
+                  <label><input type="checkbox" value="2" data-path="work.days" data-type="days"><span>Tue</span></label>
+                  <label><input type="checkbox" value="3" data-path="work.days" data-type="days"><span>Wed</span></label>
+                  <label><input type="checkbox" value="4" data-path="work.days" data-type="days"><span>Thu</span></label>
+                  <label><input type="checkbox" value="5" data-path="work.days" data-type="days"><span>Fri</span></label>
+                  <label><input type="checkbox" value="6" data-path="work.days" data-type="days"><span>Sat</span></label>
+                  <label><input type="checkbox" value="7" data-path="work.days" data-type="days"><span>Sun</span></label>
+                </div>
+              </div>
+              <div class="field" role="radiogroup" aria-labelledby="fit-label">
+                <span class="label" id="fit-label">A prayer counts as during work when</span>
+                <div class="stack">
+                  <label class="radio"><input type="radio" name="fit" value="within" data-path="work.fit"><span>the whole block is inside working hours</span></label>
+                  <label class="radio"><input type="radio" name="fit" value="start" data-path="work.fit"><span>the block starts during working hours</span></label>
+                  <label class="radio"><input type="radio" name="fit" value="overlap" data-path="work.fit"><span>any part of the block overlaps working hours</span></label>
+                </div>
+              </div>
+              <div class="field" role="radiogroup" aria-labelledby="off-label">
+                <span class="label" id="off-label">On days off</span>
+                <div class="stack">
+                  <label class="radio"><input type="radio" name="offDays" value="skip" data-path="work.offDays"><span>add nothing</span></label>
+                  <label class="radio"><input type="radio" name="offDays" value="all" data-path="work.offDays"><span>block every prayer that’s switched on below</span></label>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="step">
+            <legend><span class="step-n">4</span>Prayers</legend>
+            <p class="hint">Start is minutes after the adhan, so wudu and the congregation fit in. Use a negative number to start earlier.</p>
+            <table class="prayers">
+              <thead><tr><th scope="col">Prayer</th><th scope="col">Block it</th><th scope="col">Start</th><th scope="col">Length</th></tr></thead>
+              <tbody id="prayer-rows"></tbody>
+            </table>
+          </fieldset>
+
+          <fieldset class="step">
+            <legend><span class="step-n">5</span>Friday prayer</legend>
+            <div class="field" role="radiogroup" aria-labelledby="jm-label">
+              <span class="label" id="jm-label">On Fridays, Dhuhr is replaced by</span>
+              <div class="stack">
+                <label class="radio"><input type="radio" name="jmode" value="relative" data-path="jumuah.mode"><span>a Jumu’ah block relative to Dhuhr</span></label>
+                <label class="radio"><input type="radio" name="jmode" value="fixed" data-path="jumuah.mode"><span>a Jumu’ah block at a fixed time</span></label>
+                <label class="radio"><input type="radio" name="jmode" value="seasonal" data-path="jumuah.mode"><span>different summer-time and winter-time slots, like many European mosques</span></label>
+                <label class="radio"><input type="radio" name="jmode" value="off" data-path="jumuah.mode"><span>nothing — treat Friday like any other day</span></label>
+              </div>
+            </div>
+            <div class="row3" data-show-if="jumuah.mode!=off">
+              <div class="field" data-show-if="jumuah.mode=relative"><label for="j-rel">Start after Dhuhr adhan (min)</label><input id="j-rel" type="number" min="-60" max="180" data-path="jumuah.relativeOffset" data-type="int"></div>
+              <div class="field" data-show-if="jumuah.mode=fixed"><label for="j-fixed">Start time</label><input id="j-fixed" type="time" data-path="jumuah.fixedTime"></div>
+              <div class="field" data-show-if="jumuah.mode=seasonal"><label for="j-summer">Summer time start</label><input id="j-summer" type="time" data-path="jumuah.summerTime"></div>
+              <div class="field" data-show-if="jumuah.mode=seasonal"><label for="j-winter">Winter time start</label><input id="j-winter" type="time" data-path="jumuah.winterTime"></div>
+              <div class="field"><label for="j-dur">Length (min)</label><input id="j-dur" type="number" min="10" max="240" data-path="jumuah.duration" data-type="int"></div>
+            </div>
+            <p class="hint" data-show-if="jumuah.mode=seasonal" id="seasonal-note">Summer time means daylight-saving time at your location (CEST in Germany). Places without daylight saving always use the winter slot.</p>
+          </fieldset>
+
+          <fieldset class="step">
+            <legend><span class="step-n">6</span>In your calendar</legend>
+            <div class="field">
+              <label for="ev-title">Event title</label>
+              <input id="ev-title" type="text" maxlength="80" data-path="event.title">
+              <div class="chips" id="title-chips">
+                <button type="button" data-title="Prayer">Prayer</button>
+                <button type="button" data-title="Personal block">Personal block</button>
+                <button type="button" data-title="Focus time">Focus time</button>
+                <button type="button" data-title="Focus / Personal Block">Focus / Personal Block</button>
+              </div>
+            </div>
+            <div class="field" role="radiogroup" aria-labelledby="tm-label">
+              <span class="label" id="tm-label">Colleagues see</span>
+              <div class="stack">
+                <label class="radio"><input type="radio" name="tmode" value="custom" data-path="event.titleMode"><span>only the title above</span></label>
+                <label class="radio"><input type="radio" name="tmode" value="both" data-path="event.titleMode"><span>the title and the prayer name</span></label>
+                <label class="radio"><input type="radio" name="tmode" value="prayer" data-path="event.titleMode"><span>the prayer name only</span></label>
+              </div>
+            </div>
+            <div class="row2">
+              <label class="switch"><input type="checkbox" data-path="event.busy" data-type="bool"><span>Show me as Busy</span></label>
+              <label class="switch"><input type="checkbox" data-path="event.private" data-type="bool"><span>Mark events private</span></label>
+            </div>
+            <div class="row3">
+              <div class="field">
+                <label for="ev-desc">Event notes</label>
+                <select id="ev-desc" data-path="event.description">
+                  <option value="none">None</option>
+                  <option value="generic">“Personal time block”</option>
+                  <option value="detailed">Prayer name and adhan time</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ev-alarm">Reminder</label>
+                <select id="ev-alarm" data-path="event.alarmMinutes" data-type="int">
+                  <option value="0">None</option>
+                  <option value="5">5 minutes before</option>
+                  <option value="10">10 minutes before</option>
+                  <option value="15">15 minutes before</option>
+                </select>
+              </div>
+              <div class="field"><label for="feed-name">Calendar name</label><input id="feed-name" type="text" maxlength="60" data-path="feed.name"></div>
+            </div>
+            <details class="more">
+              <summary>Feed format</summary>
+              <div class="field" role="radiogroup" aria-labelledby="tf-label">
+                <span class="label" id="tf-label">Times in the feed</span>
+                <div class="stack">
+                  <label class="radio"><input type="radio" name="tf" value="utc" data-path="feed.timeFormat"><span>UTC instants — works the same in every calendar app</span></label>
+                  <label class="radio"><input type="radio" name="tf" value="tzid" data-path="feed.timeFormat"><span>Local time with a timezone definition (TZID + VTIMEZONE)</span></label>
+                </div>
+              </div>
+              <div class="row3">
+                <div class="field"><label for="days-ahead">Days ahead</label><input id="days-ahead" type="number" min="7" max="400" data-path="feed.daysAhead" data-type="int"></div>
+                <div class="field"><label for="days-back">Days kept in the past</label><input id="days-back" type="number" min="0" max="60" data-path="feed.daysBack" data-type="int"></div>
+              </div>
+            </details>
+          </fieldset>
+
+          <div class="actions" id="actions">
+            <div class="issues" id="issues" role="alert" hidden></div>
+            <button class="btn btn-primary btn-big" type="submit" id="submit-btn">Create my calendar feed</button>
+            <p class="hint" id="submit-hint">No account, email or calendar access needed. You get a subscription link and a private link for changing settings later.</p>
+          </div>
+        </form>
+
+        <aside class="preview" id="preview" aria-labelledby="preview-title">
+          <div class="preview-sticky">
+            <div class="preview-head">
+              <h2 id="preview-title">Preview</h2>
+              <div class="tabs" role="tablist" aria-label="Preview range">
+                <button role="tab" type="button" id="tab-days" aria-selected="true" aria-controls="pane-days">Two weeks</button>
+                <button role="tab" type="button" id="tab-year" aria-selected="false" aria-controls="pane-year">Whole year</button>
+              </div>
+            </div>
+            <div id="pane-days" role="tabpanel" aria-labelledby="tab-days">
+              <div class="preview-tools">
+                <label for="preview-from">From</label>
+                <input id="preview-from" type="date">
+                <button class="btn btn-small" type="button" id="jump-today">Today</button>
+                <button class="btn btn-small" type="button" id="jump-dst" hidden>Next clock change</button>
+              </div>
+              <div class="preview-empty" id="preview-empty"><p>Choose a location to see your blocks.</p></div>
+              <div class="day-list" id="day-list"></div>
+              <div class="day-detail" id="day-detail" aria-live="polite"></div>
+              <p class="summary" id="preview-summary"></p>
+            </div>
+            <div id="pane-year" role="tabpanel" aria-labelledby="tab-year" hidden>
+              <div class="year-chart-host" id="year-user"></div>
+              <p class="hint" id="year-user-readout" aria-live="polite">Point at the chart, or focus it and use the arrow keys.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <section class="manage-extra" id="manage-extra" hidden aria-labelledby="danger-title">
+        <h2 id="danger-title">Feed address and deletion</h2>
+        <div class="danger-row">
+          <div>
+            <h3>Issue a new feed address</h3>
+            <p>Use this if the subscription link was shared by mistake. The old address stops working, so you’ll need to subscribe again in your calendar.</p>
+          </div>
+          <button class="btn" type="button" id="rotate-btn">Issue new address</button>
+        </div>
+        <div class="danger-row">
+          <div>
+            <h3>Delete this feed</h3>
+            <p>Removes your settings from this server. Calendars subscribed to it will stop receiving blocks.</p>
+          </div>
+          <button class="btn btn-danger" type="button" id="delete-btn">Delete feed</button>
+        </div>
+        <div class="danger-row">
+          <div>
+            <h3>This browser</h3>
+            <p>This browser remembers your manage link so the “Your feed” link works. Forget it on shared computers.</p>
+          </div>
+          <button class="btn" type="button" id="forget-btn">Forget on this browser</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Prayer times are calculated on this server with the open-source <a href="https://github.com/batoulapps/adhan-js">adhan</a> library. City search uses <a href="https://www.geonames.org/">GeoNames</a> data (CC BY 4.0) stored locally, so your searches stay here. Check times against your local mosque and adjust if needed.</p>
+  </footer>
+
+  <dialog class="confirm" id="confirm-dialog">
+    <form method="dialog">
+      <h2 id="confirm-title">Are you sure?</h2>
+      <p id="confirm-body"></p>
+      <div class="confirm-actions">
+        <button class="btn" value="cancel">Cancel</button>
+        <button class="btn btn-danger" value="ok" id="confirm-ok">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

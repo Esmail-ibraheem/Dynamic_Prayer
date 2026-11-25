@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Travel — Waqt</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#16203A">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/instrument-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/travel.css">
+  <script type="module" src="/js/travel.js"></script>
+</head>
+<body class="travel-page">
+  <header class="top">
+    <a class="brand" href="/" aria-label="Waqt home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 22a11 11 0 0 1 22 0" /><circle cx="22" cy="13.5" r="2.6" /><path d="M3 22h26M8 27h16" /></svg>
+      <span>Waqt</span>
+    </a>
+    <nav class="top-nav" aria-label="Main"><a href="/manage" id="manage-link">All settings</a></nav>
+  </header>
+
+  <main class="travel">
+    <div id="travel-error" class="issues" role="alert" hidden></div>
+    <section id="travel-app" hidden>
+      <h1>Working from somewhere else?</h1>
+      <p class="lede">Pick where you are. Your calendar keeps the same subscription link and the blocks move to this place and its timezone.</p>
+
+      <div class="now" id="now-box" aria-live="polite"></div>
+
+      <div class="field">
+        <label for="t-place">Where are you working?</label>
+        <div class="place-wrap"><input id="t-place" type="text" placeholder="Search a city"></div>
+        <button class="btn btn-link" type="button" id="t-locate">Use my current location</button>
+      </div>
+      <div class="picked" id="t-picked" hidden></div>
+
+      <fieldset class="t-mode" id="t-mode" hidden>
+        <legend class="label">How long?</legend>
+        <label class="radio"><input type="radio" name="tmode" value="trip" checked><span>Just this trip, until <input type="date" id="t-until" aria-label="Last day of the trip"></span></label>
+        <label class="radio"><input type="radio" name="tmode" value="home"><span>From now on. Make this my home location.</span></label>
+      </fieldset>
+
+      <button class="btn btn-primary btn-big" type="button" id="t-save" hidden>Update my feed</button>
+
+      <div class="t-result" id="t-result" aria-live="polite"></div>
+
+      <div class="t-trips" id="t-trips"></div>
+    </section>
+  </main>
+</body>
+</html>

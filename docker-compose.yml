@@ -1,0 +1,16 @@
+services:
+  waqt:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      # The public https address people subscribe to (no trailing slash).
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      # Set to 1 when running behind a reverse proxy (Caddy, nginx, Cloudflare).
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+    volumes:
+      - waqt-data:/data
+
+volumes:
+  waqt-data:
